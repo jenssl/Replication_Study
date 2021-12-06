@@ -1,26 +1,26 @@
 # Replication_Study
 Replication paper for methods 7180
 
-#**Sarah Jensen**
-##Intro
-###In this paper, I am trying to replicate the findings of "Goal Setting as a Motivator of Unethical Behavior" by Schweitzer, Ordonez & Douma (2004)
+#**Sarah Jensen** <br />
+##Intro <br />
+###In this paper, I am trying to replicate the findings of "Goal Setting as a Motivator of Unethical Behavior" by Schweitzer, Ordonez & Douma (2004) <br />
 
-### Packages Needed 
-*dplyr
-*ggplot2
-*tidyverse
-*psych
-*readr
-*ggpubr
-*readxl
-*lsmeans
-*car
-*rstatix
-*rcompanion
-*stringr
+### Packages Needed  <br />
+*dplyr <br />
+*ggplot2 <br />
+*tidyverse <br />
+*psych <br />
+*readr <br />
+*ggpubr <br />
+*readxl <br />
+*lsmeans <br />
+*car <br />
+*rstatix <br />
+*rcompanion <br />
+*stringr <br />
 
-### Files
-*[Deidentified Data](link)
-*[Analysis](repstudy_analysis.Rmd)
+### Files <br />
+*[Deidentified Data](link) <br />
+*[Analysis](repstudy_analysis.Rmd) <br />
 
 
