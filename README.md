@@ -1,7 +1,11 @@
 # Replication_Study
-Replication paper for methods 7180
+---
+Title: Replication paper for methods 7180
 
-#**Sarah Jensen** <br />
+Author: Sarah Jensen
+
+---
+
 ##Intro <br />
 ###In this paper, I am trying to replicate the findings of "Goal Setting as a Motivator of Unethical Behavior" by Schweitzer, Ordonez & Douma (2004) <br />
 
