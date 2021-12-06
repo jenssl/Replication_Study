@@ -1,0 +1,334 @@
+---
+title: "Replication Study"
+author: "Sarah Jensen"
+date: "11/11/2021"
+output:
+  word_document: default
+  html_document: default
+---
+In this project, I attempt to replicate the results of a particularly influential paper on goal setting and unethical behavior (Schweitzer, Ordonez, & Douma, 2004).
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#load libraries
+library (dplyr)
+library (ggplot2)
+library (tidyverse)
+library (psych)
+library(readr)
+library (ggpubr)
+library(readxl)
+library(lsmeans)
+library (ggpubr)
+library (car)
+library (rstatix)
+library (rcompanion)
+library(readr)
+library (car)
+library (stringr)
+
+#load data
+## I removed Prolific ID's, IP addresses before importing here. 
+## I removed "test"/preview submissions
+
+df <- read_csv("methods/Sarah's Replication Study (10.28.21).csv")
+View(df)
+
+```
+Clean the data
+```{r, include=FALSE}
+##remove rows 2 & 3 which are additional headers from Qualtrics. Column names are now in row 1
+##remove the first 16 columns that include the start/end dates, language, etc. 
+## select all the columns I need for analysis (mostly take out timing questions)
+df <- df %>%
+  filter (comp1 == "2m3v") %>%
+  select (comp1:actual_7) %>%
+  select (comp1, comp2, practice1, practice2, r1, r2, r3, r4, r5, r6, r7, goalcommit_1, goalcommit_2, goalcommit_3, goalcommit_4, goalcommit_5, goalcommit_6, goalcommit_7, goalcommit_8, report_1, report_2, report_3, report_4, report_5, report_6, report_7, bonus_report_reward, goal_report_mere, report_dyb, age, gender, race, work_exp, sanitycheck, anythingodd, condition, actual_1, actual_2, actual_3, actual_4, actual_5, actual_6, actual_7) #should have 43 columns
+  
+  
+##recode goal commitment scores (items 1,2,3,4 & 6 are reverse coded)
+df$goalcommit_1<-dplyr::recode(df$goalcommit_1, 'Strongly Disagree'=5, 'Moderately Disagree'=4, 'Neutral'=3, 'Moderately Agree'=2,'Strongly Agree'=1)
+
+df$goalcommit_2<-dplyr::recode(df$goalcommit_2, 'Strongly Disagree'=5, 'Moderately Disagree'=4, 'Neutral'=3, 'Moderately Agree'=2,'Strongly Agree'=1)
+
+df$goalcommit_3<-dplyr::recode(df$goalcommit_3, 'Strongly Disagree'=5, 'Moderately Disagree'=4, 'Neutral'=3, 'Moderately Agree'=2,'Strongly Agree'=1)
+
+df$goalcommit_4<-dplyr::recode(df$goalcommit_4, 'Strongly Disagree'=5, 'Moderately Disagree'=4, 'Neutral'=3, 'Moderately Agree'=2,'Strongly Agree'=1)
+
+df$goalcommit_5<-dplyr::recode(df$goalcommit_5, 'Strongly Disagree'=1, 'Moderately Disagree'=2, 'Neutral'=3, 'Moderately Agree'=4,'Strongly Agree'=5)
+
+df$goalcommit_6<-dplyr::recode(df$goalcommit_6, 'Strongly Disagree'=5, 'Moderately Disagree'=4, 'Neutral'=3, 'Moderately Agree'=2,'Strongly Agree'=1)
+
+df$goalcommit_7<-dplyr::recode(df$goalcommit_7, 'Strongly Disagree'=1, 'Moderately Disagree'=2, 'Neutral'=3, 'Moderately Agree'=4,'Strongly Agree'=5)
+
+df$goalcommit_8<-dplyr::recode(df$goalcommit_8, 'Strongly Disagree'=1, 'Moderately Disagree'=2, 'Neutral'=3, 'Moderately Agree'=4,'Strongly Agree'=5)
+  
+##change things to numeric
+df$report_1 <- as.numeric(df$report_1)
+df$report_2 <- as.numeric(df$report_2)
+df$report_3 <- as.numeric(df$report_3)
+df$report_4 <- as.numeric(df$report_4)
+df$report_5 <- as.numeric(df$report_5)
+df$report_6 <- as.numeric(df$report_6)
+df$report_7 <- as.numeric(df$report_7)
+
+```
+Data manipulation:
+-Create dictionaries of the eligible words and create "actual" columns
+-Calculate totals for reported and actual words
+-Calculate difference scores
+```{r, include=FALSE}
+#Make dictionaries of all words for each letter string
+
+#r1: AEDKBUG
+words1 <- c("debug","badge", "baked", "budge", "daube", "egad", "baud", "gaud", "bead", "beak", "beau", "daub", "duke", "bake", "abed", "kagu", "aged", "ague", "gude", "bade", "dub", "due", "dug", "keg", "kea", "gab", "gad", "ged", "deb", "bad", "bag", "age", "bed", "beg", "bud", "bug", "dab", "dag", "dak", "auk", "ad", "ba", "ab", "be")
+##words removed: bedu, gaed, kae, kue, eau, kab (alternative for cab), uke (abbrv. for ukelele), da
+
+#r2: OASFKEV
+words2 <- c("fakes", "faves", "fovea", "soave", "aves", "avos", "fake", "fave", "foes", "kafs", "keas", "kefs", "koas", "oafs", "oaks", "okas", "okes", "safe", "sake", "save", "soak", "sofa", "soke", "vase", "ask", "ave", "avo", "foe", "kaf", "kas", "kea", "kef", "koa", "kos", "oaf", "oak", "oka", "oke", "ova", "sea", "ska", "vas", "voe", "ae", "as", "fa", "ka", "of", "os", "so")
+##words removed: foveas, oaves, kaes, kvas, voes, efs, fas, fes, kae, kev, oes, ose, sae, ef, es, fe, oe
+##kept fave and faves as slang...
+
+#r3: OELBJAM
+words3 <- c("jambe", "amble", "amole", "blame", "ebola", "able", "alme", "aloe", "ambo", "bale", "balm", "beam", "bema", "blae", "bola", "bole", "jamb", "lamb", "lame", "loam", "lobe", "male", "meal", "mola", "mole", "olea", "alb", "ale", "bal", "bam", "bel", "boa", "elm", "jab", "jam", "job", "joe", "lab", "lam", "lea", "lob", "mae", "mel", "moa", "mob", "oba", "ab", "ae", "al", "am", "ba", "be", "el", "em", "jo", "la", "lo", "ma", "me", "mo")
+##words removed: blam, jole, mabe, mol, obe, ole, bo, oe, om
+
+#r4: UADQWER
+words4 <- c("dewar", "quare", "wader", "awed", "dare", "dear", "draw", "drew", "dura", "dure", "quad", "read", "rude", "rued", "urea", "wade", "ward", "ware", "waur", "wear", "are", "awe", "daw", "dew", "due", "ear", "era", "qua", "rad", "raw", "red", "rue", "urd", "wad", "war", "wed", "wud", "ad", "ae", "aw", "ed", "er", "re", "we")
+## words removed: wared, waur (Scottish), eau, wae (Scottish), ar, da, de (spanish/french)
+
+#r5: EASCKIY
+words5 <- c("cakes", "cakey", "saice", "skiey", "yacks", "yikes", "aces", "cask", "sake", "asci", "cays", "saki", "yack", "ayes", "easy", "keas", "sice", "yaks", "cake", "eyas", "keys", "sick", "yeas", "ices", "sika", "case", "icky", "sack", "syce", "ace", "ice", "key", "sec", "yes", "ick", "ask", "icy", "sic", "aye", "sac", "ska", "kas", "ski", "cay", "say", "sky", "cis", "kea", "sea", "yak", "yea", "ae", "ai", "as", "ay", "is", "ka", "si", "ya", "ye")
+##words removed: casky, kae, kaes, syke, kays, caky, kyes, kye, sike, ais, kis, sei, ays, sae, kay, es, ki
+
+#r6: OELHMAZ
+words6 <- c("almeh", "amole", "azole", "haole", "hazel", "hemal", "mahoe", "mohel", "ahem", "alme", "aloe", "haem", "hale", "halm", "halo", "hame", "haze", "heal", "helm", "helo", "hole", "holm", "home", "lame", "laze", "loam", "male", "maze", "meal", "mola", "mole", "olea", "zeal", "zoea", "ale", "lam", "azo", "lea", "ohm", "elm", "mae", "zoa", "ham", "mel", "hao", "mho", "hem", "moa", "ae", "ah", "al", "am", "eh", "el", "em", "ha", "he", "hm", "la", "lo", "ma", "me", "mo", "oh", "om")
+##words removed: zoeal, mol, lez (offensive term for lesbian), ole, hae, oe, za
+
+#r7: AODJGIP
+words7 <- c("podia", "agio", "dopa", "goad", "jiao", "paid", "ado", "ago", "aid", "apo", "dag", "dap", "dig", "dip", "dog", "gad", "gap", "goa", "god", "jag", "jig", "jog", "oda", "pad", "pod", "poi", "ad", "ag", "ai", "do", "gi", "go", "id", "jo", "od", "pa", "pi")
+## words removed: gadjo, pagod, apod, gadi, padi, gip (offensive), pia, da, di, oi, op (used as op art)
+
+#make new columns for the actual number of words created in each round using the dictionaries above
+#the final df is new7
+new1 <- within(
+  practice_df,
+  actual_1 <- sapply(
+    gregexpr(paste0(words1, collapse = "|"), r1, ignore.case = TRUE),
+    function(x) sum(x > 0)
+    )
+)
+new2 <- within (
+  new1,
+  actual_2 <- sapply(
+    gregexpr(paste0(words2, collapse = "|"), r2, ignore.case = TRUE),
+    function(x) sum(x > 0)
+    )
+)
+new3 <- within (
+  new2,
+  actual_3 <- sapply(
+    gregexpr(paste0(words3, collapse = "|"), r3, ignore.case = TRUE),
+    function(x) sum(x > 0)
+    )
+)
+new4 <- within (
+  new3,
+  actual_4 <- sapply(
+    gregexpr(paste0(words4, collapse = "|"), r4, ignore.case = TRUE),
+    function(x) sum(x > 0)
+    )
+)
+new5 <- within (
+  new4,
+  actual_5 <- sapply(
+    gregexpr(paste0(words5, collapse = "|"), r5, ignore.case = TRUE),
+    function(x) sum(x > 0)
+    )
+)
+new6 <- within (
+  new5,
+  actual_6 <- sapply(
+    gregexpr(paste0(words6, collapse = "|"), r6, ignore.case = TRUE),
+    function(x) sum(x > 0)
+    )
+)
+new7 <- within (
+  new6,
+  actual_7 <- sapply(
+    gregexpr(paste0(words7, collapse = "|"), r7, ignore.case = TRUE),
+    function(x) sum(x > 0)
+    )
+)
+
+##create totals for reported and actual words
+##create difference score between actual and reported for each of the 7 rounds and the total
+data1 <- new7 %>%
+  mutate (reporttotal=rowSums(select(.,report_1:report_7)), actualtotal=rowSums(select(., actual_1:actual_7)), differencetotal=reporttotal-actualtotal, diff_1=report_1-actual_1, diff_2=report_2-actual_2, diff_3=report_3-actual_3, diff_4=report_4-actual_4, diff_5=report_5-actual_5, diff_6=report_6-actual_6, diff_7=report_7-actual_7) 
+
+#--------------------
+#code for catching duplicate words in the string, but I don't know if these duplicates are filtered out of the data new7
+myp attern <- regex (
+  pattern = "(\\b\\w+\\b)(\\s+\\1)", ignore_case= TRUE)
+
+new7 %>%
+  str_subset (mypattern) %>%
+  str_match (mypattern) 
+  #str_remove (mypattern)
+
+```
+Explore the data + demographics
+
+```{r}
+#demographics
+data1$age <- as.numeric(data1$age)
+mean(data1$age, na.rm = TRUE) #36.69
+sd(data1$age, na.rm = TRUE) #13.44
+table (data1$gender) #51% female (86/169)
+table (data1$race) #76% white (129/169)
+data1$work_exp <- as.numeric(data1$work_exp)
+mean(data1$work_exp, na.rm = TRUE) #14.86
+
+
+#summarize the totals by condition
+summary1 <- data1 %>%
+  group_by (condition) %>%
+  get_summary_stats (reporttotal, actualtotal, differencetotal, type="mean_sd")
+
+print(summary1)
+
+#compare words reported in each group 
+oneway.test(reporttotal ~ condition, data = data1, var.equal = TRUE)
+oneway_result <- aov(reporttotal ~ condition, data = data1)
+TukeyHSD(oneway_result)
+
+#compare number of words actually generated in each group
+oneway.test(actualtotal ~ condition, data = data1, var.equal = TRUE)
+oneway_result <- aov(actualtotal ~ condition, data = data1)
+TukeyHSD(oneway_result)
+
+```
+### Analysis for H1: People with specific, unmet goals will be more likely to overreport their performance compared with those who don't have specific goals.
+```{r}
+#make new df for comparing number of words in the goal conditions to the DYB condition 
+ttest_df <- data1 %>%
+  select (condition, reporttotal, actualtotal, differencetotal) %>%
+  mutate (condition =recode_factor(condition, doyourbest = "doyourbest", meregoal= "goalavg", rewardgoal= "goalavg"))
+
+#t-test comparing actual number of words
+t.test(actualtotal ~ condition, ttest_df, var.equal = TRUE)
+
+#t-test comparing reported number of words
+t.test(reporttotal ~ condition, ttest_df, var.equal = TRUE)
+
+#t-test comparing difference scores
+t.test(differencetotal ~ condition, ttest_df, var.equal=TRUE)
+
+#summary table of stats
+summary_ttest <- ttest_df %>%
+  group_by (condition) %>%
+  get_summary_stats (reporttotal, actualtotal, differencetotal, type="mean_sd")
+
+print(summary_ttest)
+
+#find the people who overstated at least once by filtering for differencetotal >= 1
+chisq_df1 <- data1 %>%
+  select (condition, differencetotal) %>%
+  filter (differencetotal >= 1)
+  
+#make a table showing counts of overreports per condition
+table_overreport <- data1 %>%
+  select (condition, differencetotal) %>%
+  filter (differencetotal >= 1) %>%
+  group_by (condition) %>%
+  count (differencetotal >= 1) %>%
+  spread (key="condition", value="n")
+
+#------------------------------------------------------------------------
+##I'm trying to get the df ready for chisq test...not working
+try <- data1 %>%
+  select (condition, differencetotal) %>%
+  group_by(condition) %>%
+  count (differencetotal >= 1) %>%
+  spread (key= "condition", value = "n")
+
+##compare difference in DYB vs. mere goal & DYB vs. reward goal...need to fix df
+chisq.test(table_overreport$doyourbest, table_overreport$meregoal)
+chisq.test(chisq_df1$doyourbest, chisq_df$rewardgoal)
+
+```
+### Analysis for H2: People with unmet reward goals will be more likely to overstate their performance than people with unmet mere goals.
+```{r}
+#t-test that examines difference score in rewardgoal vs meregoal conditions
+ttest_df2 <- data1 %>%
+  filter (condition != "doyourbest") %>%
+  select (condition, reporttotal, actualtotal, differencetotal)
+
+t.test(actualtotal ~ condition, ttest_df2, var.equal = TRUE)
+
+#make table to look at proportions of people 
+
+#chi-squared to examine over reports in just the goal conditions
+chisq_df2 <- data1 %>%
+  filter (condition != "doyourbest") %>%
+  select (condition, reporttotal, actualtotal, differencetotal) %>%
+  group_by (condition) %>%
+  count (differencetotal >= 1)
+
+chisq.test(chisq_df$-----, chisq_df$-----)
+
+#t-test to see if number of words overreported differs by condition.
+t.test(chisq_df$----, ttest_df$-----, paired = TRUE, alternative = "two.sided")
+
+```
+### Analysis H3: People who fail to reach their goals by a small margin will be more likely to falsely claim to have reached their goals than people who fail to reach their goals by a large margin.
+```{r}
+
+
+```
+Some graphs
+```{r}
+# barplot showing the average number of reported words per condition. 
+##there is a higher average of reported words in the reward goal condition.
+plot1 <- data1 %>%
+  group_by (condition) %>%
+  summarize (mean_report=mean(reporttotal)) %>%
+  ggplot (aes(condition, mean_report, fill=condition)) +
+  geom_bar (stat = "identity") +
+  theme_pubr (base_size=12, legend="none") +
+  labs (title="Number of Words Reported By Condition", y="Number of words", x="Condition")
+
+(plot1)
+
+#table replicated from pg. 427
+table427 <- data1 %>%
+  select (condition, actual_1:acutal_7) %>% 
+  group_by (condition) %>% 
+  get_summary_stats (reporttotal, actualtotal, differencetotal, type="mean_sd")
+
+table427_2 <-dat a1 %>%
+  mutate (actual_metgoal_1 = actual_1 >= 9, actual_metgoal_2 = actual_2 >= 9, actual_metgoal_3 = actual_3 >= 9, actual_metgoal_4 = actual_4 >= 9, actual_metgoal_5 = actual_5 >= 9, actual_metgoal_6 = actual_6 >= 9, actual_metgoal_7 = actual_7 >= 9, claim_metgoal_1 = report_1 >= 9, claim_metgoal_2 = report_2 >=9, claim_metgoal_3 = report_3 >=9, claim_metgoal_4 = report_4 >=9, claim_metgoal_5 = report_5 >=9, claim_metgoal_6 = report_6 >=9, claim_metgoal_7 = report_7 >=9)
+
+
+table427_2 %>%
+  mutate (actual_metgoal_n = case_when(actual_metgoal_1 == "TRUE" ~ "TRUE"))
+                                            
+                         
+species == "Droid" ~ "robot"
+#rowSums	(	D bool[[2]] 	mat	)	
+#which(rowSums(m3T3L1mRNA.tmp[,c(2,4)] == 20) != 2)
+#mutate(blubb = rowSums(select(., -3)))
+#mutate(blubb = rowSums(select(., .dots = all_of(desired_columns))))
+#rowSums(select(., matches("^(d|c)")) == 4) > 0)
+#sum(c_across(where(is.numeric)
+#claim_metgoal_n = rowsums(., []claim_metgoal_1:claim_metgoal_7))
+        
+ # select (condition, actual_metgoal_1:claim_metgoal_7)
+          
+data1 <- new7 %>%
+  mutate (reporttotal=rowSums(select(.,report_1:report_7)), actualtotal=rowSums(select(., actual_1:actual_7)), differencetotal=reporttotal-actualtotal, diff_1=report_1-actual_1, diff_2=report_2-actual_2, diff_3=report_3-actual_3, diff_4=report_4-actual_4, diff_5=report_5-actual_5, diff_6=report_6-actual_6, diff_7=report_7-actual_7) 
+  
+```
+
+```
+  
