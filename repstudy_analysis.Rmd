@@ -165,7 +165,7 @@ data1 <- new7 %>%
 
 #--------------------
 #code for catching duplicate words in the string, but I don't know if these duplicates are filtered out of the data new7
-myp attern <- regex (
+mypattern <- regex (
   pattern = "(\\b\\w+\\b)(\\s+\\1)", ignore_case= TRUE)
 
 new7 %>%
@@ -281,6 +281,8 @@ t.test(chisq_df$----, ttest_df$-----, paired = TRUE, alternative = "two.sided")
 ### Analysis H3: People who fail to reach their goals by a small margin will be more likely to falsely claim to have reached their goals than people who fail to reach their goals by a large margin.
 ```{r}
 #make df keeping all rounds & totals for only goal conditions, filter out people who made 9 or more words
+#for the remaining data filter by difference total to find those who overstated once and use diff scores to find those who accurately stated once and then
+#make report_correct & report_incorrect variables
 df3 <- data1 %>%
   filter (condition != "doyourbest") %>%
   filter (actual_1<=9) %>%
@@ -289,11 +291,16 @@ df3 <- data1 %>%
   filter (actual_4<=9) %>%
   filter (actual_5<=9) %>%
   filter (actual_6<=9) %>%
-  filter (actual_7<=9)
-  
-#for the remaining data create a new variable called "overstate" and then 
-#find people who overstated once and accurately stated once and calculate the total number of words for each person
+  filter (actual_7<=9) %>%
+  filter (differencetotal !=0) %>%
+  filter (diff_1 ==0 | diff_2==0 | diff_3==0 | diff_4==0 | diff_5==0| diff_6==0 | diff_7==0) %>%
+  mutate (report_correct=sum(c_across(diff_1:diff_7, case_when(report_1:report_7 !=0)))) 
+
+mutate(
+    total = sum(c_across(-c))
+
 #run paired t-tests
+
 
 ```
 Some graphs
