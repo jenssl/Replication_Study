@@ -7,6 +7,8 @@ output:
   html_document: default
 ---
 In this project, I attempt to replicate the results of a particularly influential paper on goal setting and unethical behavior (Schweitzer, Ordonez, & Douma, 2004).
+
+First, I'll load libraries and the data
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -19,33 +21,28 @@ library(readr)
 library (ggpubr)
 library(readxl)
 library(lsmeans)
-library (ggpubr)
 library (car)
 library (rstatix)
 library (rcompanion)
-library(readr)
-library (car)
 library (stringr)
 
 #load data
-## I removed Prolific ID's, IP addresses before importing here. 
+## I removed Prolific ID's, IP addresses before importing here
+## I removed a row of headers that wasn't needed
 ## I removed "test"/preview submissions
 
-df <- read_csv("methods/Sarah's Replication Study (10.28.21).csv")
+df <- read_excel("~/GitHub/Replication_Study/repdata_12.9.21.xlsx")
 View(df)
 
 ```
 Clean the data
 ```{r, include=FALSE}
-##remove rows 2 & 3 which are additional headers from Qualtrics. Column names are now in row 1
-##remove the first 16 columns that include the start/end dates, language, etc. 
 ## select all the columns I need for analysis (mostly take out timing questions)
 df <- df %>%
   filter (comp1 == "2m3v") %>%
-  select (comp1:actual_7) %>%
-  select (comp1, comp2, practice1, practice2, r1, r2, r3, r4, r5, r6, r7, goalcommit_1, goalcommit_2, goalcommit_3, goalcommit_4, goalcommit_5, goalcommit_6, goalcommit_7, goalcommit_8, report_1, report_2, report_3, report_4, report_5, report_6, report_7, bonus_report_reward, goal_report_mere, report_dyb, age, gender, race, work_exp, sanitycheck, anythingodd, condition, actual_1, actual_2, actual_3, actual_4, actual_5, actual_6, actual_7) #should have 43 columns
+  select (PID, comp1, comp2, practice1, practice2, r1, r2, r3, r4, r5, r6, r7, goalcommit_1, goalcommit_2, goalcommit_3, goalcommit_4, goalcommit_5, goalcommit_6, goalcommit_7, goalcommit_8, report_1, report_2, report_3, report_4, report_5, report_6, report_7, bonus_report_reward, goal_report_mere, report_dyb, age, gender, race, work_exp, sanitycheck, anythingodd, condition)
   
-  
+
 ##recode goal commitment scores (items 1,2,3,4 & 6 are reverse coded)
 df$goalcommit_1<-dplyr::recode(df$goalcommit_1, 'Strongly Disagree'=5, 'Moderately Disagree'=4, 'Neutral'=3, 'Moderately Agree'=2,'Strongly Agree'=1)
 
@@ -112,7 +109,7 @@ words7 <- c("podia", "agio", "dopa", "goad", "jiao", "paid", "ado", "ago", "aid"
 #make new columns for the actual number of words created in each round using the dictionaries above
 #the final df is new7
 new1 <- within(
-  practice_df,
+  df,
   actual_1 <- sapply(
     gregexpr(paste0(words1, collapse = "|"), r1, ignore.case = TRUE),
     function(x) sum(x > 0)
@@ -182,12 +179,12 @@ Explore the data + demographics
 ```{r}
 #demographics
 data1$age <- as.numeric(data1$age)
-mean(data1$age, na.rm = TRUE) #36.69
-sd(data1$age, na.rm = TRUE) #13.44
-table (data1$gender) #51% female (86/169)
-table (data1$race) #76% white (129/169)
+mean(data1$age, na.rm = TRUE) #36.77
+sd(data1$age, na.rm = TRUE) #13.43
+table (data1$gender) #51% female (86/168)
+table (data1$race) #76% white (128/168)
 data1$work_exp <- as.numeric(data1$work_exp)
-mean(data1$work_exp, na.rm = TRUE) #14.86
+mean(data1$work_exp, na.rm = TRUE) #14.92
 
 
 #summarize the totals by condition
@@ -216,13 +213,13 @@ ttest_df <- data1 %>%
   mutate (condition =recode_factor(condition, doyourbest = "doyourbest", meregoal= "goalavg", rewardgoal= "goalavg"))
 
 #t-test comparing actual number of words
-t.test(actualtotal ~ condition, ttest_df, var.equal = TRUE)
+t.test(actualtotal ~ condition, ttest_df, var.equal = FALSE)
 
 #t-test comparing reported number of words
-t.test(reporttotal ~ condition, ttest_df, var.equal = TRUE)
+t.test(reporttotal ~ condition, ttest_df, var.equal = FALSE)
 
 #t-test comparing difference scores
-t.test(differencetotal ~ condition, ttest_df, var.equal=TRUE)
+t.test(differencetotal ~ condition, ttest_df, var.equal=FALSE)
 
 #summary table of stats
 summary_ttest <- ttest_df %>%
@@ -283,7 +280,20 @@ t.test(chisq_df$----, ttest_df$-----, paired = TRUE, alternative = "two.sided")
 ```
 ### Analysis H3: People who fail to reach their goals by a small margin will be more likely to falsely claim to have reached their goals than people who fail to reach their goals by a large margin.
 ```{r}
-
+#make df keeping all rounds & totals for only goal conditions, filter out people who made 9 or more words
+df3 <- data1 %>%
+  filter (condition != "doyourbest") %>%
+  filter (actual_1<=9) %>%
+  filter (actual_2<=9) %>%
+  filter (actual_3<=9) %>%
+  filter (actual_4<=9) %>%
+  filter (actual_5<=9) %>%
+  filter (actual_6<=9) %>%
+  filter (actual_7<=9)
+  
+#for the remaining data create a new variable called "overstate" and then 
+#find people who overstated once and accurately stated once and calculate the total number of words for each person
+#run paired t-tests
 
 ```
 Some graphs
@@ -331,4 +341,3 @@ data1 <- new7 %>%
 ```
 
 ```
-  
