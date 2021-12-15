@@ -241,22 +241,29 @@ t.test(differencetotal_neg ~ condition, ttest_df, var.equal=FALSE)
 #summary table of stats
 summary_ttest <- ttest_df %>%
   group_by (condition) %>%
-  get_summary_stats (reporttotal, actualtotal, differencetotal, type="mean_sd")
+  get_summary_stats (reporttotal, actualtotal, differencetotal_neg, differencetotal_pos, type="mean_sd")
 
 print(summary_ttest)
 
+#percentages of people who overstated at least once
+overstated <- data1 %>%
+  select (condition, differencetotal_pos) %>%
+  group_by(condition) %>%
+  summarize (total=sum(differencetotal_pos>=1))
+##DYB 36.2%
+##Meregoal 50%
+##Reward 53.7%
+
+
 #find the people who overstated at least once by filtering for differencetotal >= 1
 chisq_df1 <- data1 %>%
-  select (condition, differencetotal) %>%
-  filter (differencetotal >= 1)
+  select (condition, differencetotal_pos) %>%
+  filter (differencetotal_pos >= 1) %>%
+  mutate(condition = recode(condition, rewardgoal = 1, meregoal=2, doyourbest= 3)) %>%
+  select (condition, differencetotal_pos)
   
-#make a table showing counts of overreports per condition
-table_overreport <- data1 %>%
-  select (condition, differencetotal) %>%
-  filter (differencetotal >= 1) %>%
-  group_by (condition) %>%
-  count (differencetotal >= 1) %>%
-  spread (key="condition", value="n")
+chisq <- chisq.test(chisq_df1)
+chisq
 
 #------------------------------------------------------------------------
 ##I'm trying to get the df ready for chisq test...not working
@@ -363,6 +370,38 @@ p2 <- dat4 %>%
 plot2 <- ggarrange(p1, p2, ncol = 1)
 
 (plot2)
+
+#Histogram showing the number of words overreported
+plot3 <- ggplot (data1, aes(differencetotal_pos)) +
+  geom_histogram(binwidth=1) +
+  theme_pubr (base_size=12, legend="none") +
+  scale_fill_grey() +
+  labs (title="Overreports", y="Number of People", x="Number of overreports")
+(plot3)
+
+#Histogram showing the number of words underreported
+plot4 <- ggplot (data1, aes(differencetotal_neg)) +
+  geom_histogram(binwidth=1) +
+  theme_pubr (base_size=12, legend="none") +
+  scale_fill_grey() +
+  labs (title="Underreports", y="Number of People", x="Number of underreports")
+(plot4)
+
+#Histogram showing the number of rounds in which people overreported
+plot5<- ggplot (data1, aes(COUNT_POS)) +
+  geom_histogram(binwidth=1) +
+  theme_pubr (base_size=12, legend="none") +
+  scale_fill_grey() +
+  labs (title="Number of Rounds in which participants overreported", y="People who overreported", x="Rounds")
+(plot5)
+
+#Histogram showing the number of rounds in which people underreported
+plot6 <- ggplot (data1, aes(COUNT_NEG)) +
+  geom_histogram(binwidth=1) +
+  theme_pubr (base_size=12, legend="none") +
+  scale_fill_grey() +
+  labs (title="Number of Rounds in which participants underreported", y="People who underreported", x="Rounds")
+(plot6)
     
 #table replicated from pg. 427
 table427 <- data1 %>%
