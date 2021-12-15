@@ -1,0 +1,61 @@
+---
+title: "Repstudy_VariableKey"
+author: "Sarah Jensen"
+date: "12/14/2021"
+output: html_document
+---
+
+Variable Key
+#*Only includes variables relevant for the analyses*
+
+1. r1
+2. r2
+3. r3
+4. r4
+5. r5
+6. r6
+7. r7
+8. goal_commit_1
+9. goal_commit_2
+10. goal_commit_3
+11. goal_commit_4
+12. goal_commit_5
+13. goal_commit_6
+14. goal_commit_7
+15. goal_commit_8
+16. report_1
+17. report_2
+18. report_3
+19. report_4
+20. report_5
+21. report_6
+22. report_7
+23. bonus_report_reward
+24. goal_report_mere
+25. report_dyb
+26. age
+27. gender
+28. race
+29. word_exp
+30. condition
+31. actual_1
+32. actual_2
+33. actual_3
+34. actual_4
+35. actual_5
+36. actual_6
+37. actual_7
+38. reporttotal
+39. actualtotal
+40. differencetotal
+41. diff_1
+42. diff_2
+43. diff_3
+44. diff_4
+45. diff_5
+46. diff_6
+47. diff_7
+48. differencetotal_pos
+49. COUNT_POS
+50. differencetotal_neg
+51. COUNT_NEG

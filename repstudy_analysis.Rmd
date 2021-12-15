@@ -168,17 +168,25 @@ new7 <- within (
 ##create totals for reported and actual words
 ##create difference score between actual and reported for each of the 7 rounds and the total
 data1 <- new7 %>%
-  mutate (reporttotal=rowSums(select(.,report_1:report_7)), actualtotal=rowSums(select(., actual_1:actual_7)), differencetotal=reporttotal-actualtotal, diff_1=report_1-actual_1, diff_2=report_2-actual_2, diff_3=report_3-actual_3, diff_4=report_4-actual_4, diff_5=report_5-actual_5, diff_6=report_6-actual_6, diff_7=report_7-actual_7) 
+  mutate (reporttotal=rowSums(select(.,report_1:report_7)), actualtotal=rowSums(select(., actual_1:actual_7)), differencetotal=actualtotal- reporttotal, diff_1=report_1-actual_1, diff_2=report_2-actual_2, diff_3=report_3-actual_3, diff_4=report_4-actual_4, diff_5=report_5-actual_5, diff_6=report_6-actual_6, diff_7=report_7-actual_7) 
 
-#--------------------
-#code for catching duplicate words in the string, but I don't know if these duplicates are filtered out of the data new7
-mypattern <- regex (
-  pattern = "(\\b\\w+\\b)(\\s+\\1)", ignore_case= TRUE)
+#make new columns for the total number of words overreported and underreported
+##differencetotal_pos and differencetotal_neg will sum the words
+##COUNT_POS and COUNT_NEG will count the number of rounds in which words were overcounted
+data2 <- data1 %>%
+  select(., diff_1:diff_7) %>%
+  mutate(differencetotal_pos = rowSums(mutate_all(., ~if_else(.x > 0, .x, NA_real_)), na.rm = TRUE),
+         COUNT_POS = rowSums(. > 0, na.rm = TRUE)) %>%
+  mutate(differencetotal_neg = rowSums(mutate_all(., ~if_else(.x < 0, .x, NA_real_)), na.rm = TRUE),
+         COUNT_NEG = rowSums(. < 0, na.rm = TRUE)) %>%
+  select (., diff_7:COUNT_NEG)
 
-new7 %>%
-  str_subset (mypattern) %>%
-  str_match (mypattern) 
-  #str_remove (mypattern)
+#combine the datasets and drop "diff&7" duplicate column
+data3 <- cbind (data1, data2) %>%
+  subset(., select=which(!duplicated(names(.)))) 
+
+#overwrite data1
+data1 <- data3
 
 ```
 
