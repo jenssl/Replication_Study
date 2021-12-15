@@ -2,20 +2,22 @@
 title: "Repstudy_VariableKey"
 author: "Sarah Jensen"
 date: "12/14/2021"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 Variable Key
 #*Only includes variables relevant for the analyses*
 
-1. r1
-2. r2
-3. r3
-4. r4
-5. r5
-6. r6
-7. r7
-8. goal_commit_1
+1. r1 = Words participants created in round 1
+2. r2 = Words participants created in round 2
+3. r3 = Words participants created in round 3
+4. r4 = Words participants created in round 4
+5. r5 = Words participants created in round 5
+6. r6 = Words participants created in round 6
+7. r7 = Words participants created in round 7
+8. goal_commit_1 = response to 
 9. goal_commit_2
 10. goal_commit_3
 11. goal_commit_4
@@ -23,39 +25,39 @@ Variable Key
 13. goal_commit_6
 14. goal_commit_7
 15. goal_commit_8
-16. report_1
-17. report_2
-18. report_3
-19. report_4
-20. report_5
-21. report_6
-22. report_7
-23. bonus_report_reward
-24. goal_report_mere
-25. report_dyb
-26. age
-27. gender
-28. race
-29. word_exp
-30. condition
-31. actual_1
-32. actual_2
-33. actual_3
-34. actual_4
-35. actual_5
-36. actual_6
-37. actual_7
-38. reporttotal
-39. actualtotal
-40. differencetotal
-41. diff_1
-42. diff_2
-43. diff_3
-44. diff_4
-45. diff_5
-46. diff_6
-47. diff_7
-48. differencetotal_pos
-49. COUNT_POS
-50. differencetotal_neg
-51. COUNT_NEG
+16. report_1 = Number of words participants reported creating in round 1
+17. report_2 = Number of words participants reported creating in round 2
+18. report_3 = Number of words participants reported creating in round 3
+19. report_4 = Number of words participants reported creating in round 4
+20. report_5 = Number of words participants reported creating in round 5
+21. report_6 = Number of words participants reported creating in round 6
+22. report_7 = Number of words participants reported creating in round 7
+23. bonus_report_reward = reported the number of rounds for which they reached their goal and should receive a bonus
+24. goal_report_mere = reported the number of rounds for which they created 9 or more words
+25. report_dyb = reported the number of rounds for which they created 9 or more words
+26. age = participant's self-reported age
+27. gender = participant's self-reported gender
+28. race = participant's self-reported race
+29. work_exp = particpant's self-reported years of work experience
+30. condition = condition participants were assigned to
+31. actual_1 = Actual number of words participants created in round 1
+32. actual_2 = Actual number of words participants created in round 2
+33. actual_3 = Actual number of words participants created in round 3
+34. actual_4 = Actual number of words participants created in round 4
+35. actual_5 = Actual number of words participants created in round 5
+36. actual_6 = Actual number of words participants created in round 6
+37. actual_7 = Actual number of words participants created in round 7
+38. reporttotal = Sum of the number of words reported across all 7 rounds 
+39. actualtotal = sum of the number of words actually created across all 7 rounds
+40. differencetotal = sum of the actualtotal and reporttotal words (this is not completely accurate since underreport and overreports could end up cancelling each other out)
+41. diff_1 = Difference in the number of words participants reported vs. created in round 1
+42. diff_2 = Difference in the number of words participants reported vs. created in round 2
+43. diff_3 = Difference in the number of words participants reported vs. created in round 3
+44. diff_4 = Difference in the number of words participants reported vs. created in round 4
+45. diff_5 = Difference in the number of words participants reported vs. created in round 5
+46. diff_6 = Difference in the number of words participants reported vs. created in round 6
+47. diff_7 = Difference in the number of words participants reported vs. created in round 7
+48. differencetotal_pos = Sum of the number of words overreported
+49. COUNT_POS = Number of rounds in which words were overreported
+50. differencetotal_neg = Sum of the number of words underreported
+51. COUNT_NEG = Numer of rounds in which words were underreported

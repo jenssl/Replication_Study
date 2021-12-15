@@ -225,7 +225,7 @@ TukeyHSD(oneway_result)
 ```{r}
 #make new df for comparing number of words in the goal conditions to the DYB condition 
 ttest_df <- data1 %>%
-  select (condition, reporttotal, actualtotal, differencetotal) %>%
+  select (condition, reporttotal, actualtotal, differencetotal_pos, differencetotal_neg) %>%
   mutate (condition =recode_factor(condition, doyourbest = "doyourbest", meregoal= "goalavg", rewardgoal= "goalavg"))
 
 #t-test comparing actual number of words
@@ -234,8 +234,9 @@ t.test(actualtotal ~ condition, ttest_df, var.equal = FALSE)
 #t-test comparing reported number of words
 t.test(reporttotal ~ condition, ttest_df, var.equal = FALSE)
 
-#t-test comparing difference scores
-t.test(differencetotal ~ condition, ttest_df, var.equal=FALSE)
+#t-test comparing difference scores for overreport and underreport
+t.test(differencetotal_pos ~ condition, ttest_df, var.equal=FALSE)
+t.test(differencetotal_neg ~ condition, ttest_df, var.equal=FALSE)
 
 #summary table of stats
 summary_ttest <- ttest_df %>%
