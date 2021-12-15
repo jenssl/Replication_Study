@@ -5,10 +5,13 @@ date: "11/11/2021"
 output:
   word_document: default
   html_document: default
+editor_options: 
+  chunk_output_type: console
 ---
 In this project, I attempt to replicate the results of a particularly influential paper on goal setting and unethical behavior (Schweitzer, Ordonez, & Douma, 2004).
 
 First, I'll load libraries and the data
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -35,7 +38,9 @@ df <- read_excel("~/GitHub/Replication_Study/repdata_12.9.21.xlsx")
 View(df)
 
 ```
+
 Clean the data
+
 ```{r, include=FALSE}
 ## select all the columns I need for analysis (mostly take out timing questions)
 df <- df %>%
@@ -70,10 +75,12 @@ df$report_6 <- as.numeric(df$report_6)
 df$report_7 <- as.numeric(df$report_7)
 
 ```
+
 Data manipulation:
 -Create dictionaries of the eligible words and create "actual" columns
 -Calculate totals for reported and actual words
 -Calculate difference scores
+
 ```{r, include=FALSE}
 #Make dictionaries of all words for each letter string
 
@@ -174,6 +181,7 @@ new7 %>%
   #str_remove (mypattern)
 
 ```
+
 Explore the data + demographics
 
 ```{r}
@@ -294,11 +302,11 @@ df3 <- data1 %>%
   filter (actual_7<=9) %>%
   filter (differencetotal !=0) %>%
   filter (diff_1 ==0 | diff_2==0 | diff_3==0 | diff_4==0 | diff_5==0| diff_6==0 | diff_7==0) %>%
-  mutate (report_correct=sum(c_across(diff_1:diff_7, case_when(report_1:report_7 !=0)))) 
+  mutate (report_correct=rowSums(select_if(actual_1:actual_7(select_if( diff_1:diff_7, contains(0))))))
 
-mutate(
+#mutate(
     total = sum(c_across(-c))
-
+#matches(match, ignore.case = TRUE, perl = FALSE, vars = NULL)
 #run paired t-tests
 
 
@@ -309,23 +317,56 @@ Some graphs
 ##there is a higher average of reported words in the reward goal condition.
 plot1 <- data1 %>%
   group_by (condition) %>%
-  summarize (mean_report=mean(reporttotal)) %>%
-  ggplot (aes(condition, mean_report, fill=condition)) +
+  get_summary_stats (reporttotal, type="mean_sd") %>%
+  ggplot (aes(condition, mean, fill=condition)) +
   geom_bar (stat = "identity") +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.2,
+                 position=position_dodge()) +
   theme_pubr (base_size=12, legend="none") +
+  scale_fill_grey() +
   labs (title="Number of Words Reported By Condition", y="Number of words", x="Condition")
 
 (plot1)
 
+#overstatement and overstatement mean scores by condition
+dat3 <- subset (data1, differencetotal >=0) %>%
+  group_by (condition) %>%
+  summarize (diffT=mean(differencetotal))
+
+dat4 <- subset (data1, differencetotal <=0) %>%
+  group_by (condition) %>%
+  summarize (diffT=mean(differencetotal))
+
+p1 <- dat3 %>%
+  ggplot(aes(x=condition, y=diffT, group=1))+
+    geom_line ()+
+    geom_point(size=2) +
+    theme_pubr (base_size=12, legend="none") +
+  labs (title="Average Number of Overreported and UnderReported Words by Condition", y="Words", x= " ")
+
+p2 <- dat4 %>%
+  ggplot(aes(x=condition, y=diffT, group=1))+
+    geom_line ()+
+    geom_point(size=2) +
+    theme_pubr (base_size=12, legend="none") +
+    labs (y="Words", x="Condition")
+
+plot2 <- ggarrange(p1, p2, ncol = 1)
+
+(plot2)
+    
 #table replicated from pg. 427
 table427 <- data1 %>%
-  select (condition, actual_1:acutal_7) %>% 
+  select (condition, actual_1:differencetotal) %>% 
   group_by (condition) %>% 
   get_summary_stats (reporttotal, actualtotal, differencetotal, type="mean_sd")
 
-table427_2 <-dat a1 %>%
+(table427)
+
+table427_2 <-data1 %>%
   mutate (actual_metgoal_1 = actual_1 >= 9, actual_metgoal_2 = actual_2 >= 9, actual_metgoal_3 = actual_3 >= 9, actual_metgoal_4 = actual_4 >= 9, actual_metgoal_5 = actual_5 >= 9, actual_metgoal_6 = actual_6 >= 9, actual_metgoal_7 = actual_7 >= 9, claim_metgoal_1 = report_1 >= 9, claim_metgoal_2 = report_2 >=9, claim_metgoal_3 = report_3 >=9, claim_metgoal_4 = report_4 >=9, claim_metgoal_5 = report_5 >=9, claim_metgoal_6 = report_6 >=9, claim_metgoal_7 = report_7 >=9)
 
+print(table427_2)
 
 table427_2 %>%
   mutate (actual_metgoal_n = case_when(actual_metgoal_1 == "TRUE" ~ "TRUE"))
@@ -345,6 +386,4 @@ species == "Droid" ~ "robot"
 data1 <- new7 %>%
   mutate (reporttotal=rowSums(select(.,report_1:report_7)), actualtotal=rowSums(select(., actual_1:actual_7)), differencetotal=reporttotal-actualtotal, diff_1=report_1-actual_1, diff_2=report_2-actual_2, diff_3=report_3-actual_3, diff_4=report_4-actual_4, diff_5=report_5-actual_5, diff_6=report_6-actual_6, diff_7=report_7-actual_7) 
   
-```
-
 ```
