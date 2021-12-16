@@ -346,24 +346,35 @@ df3$report_incorrect <- rowSums(df3[actual_cols] * as.numeric(df3[diff_cols] != 
 
 #run paired t-tests
 t.test(df3$report_correct, df3$report_incorrect, paired = TRUE, alternative = "two.sided")
+
 table_df3 <- df3 %>%
   get_summary_stats (report_correct, report_incorrect, type= "mean_sd")
 
-
-#for the cases in which 7 or 8 words were created, 
+#for the cases in which 8 words were created, 
 df4 <- data1 %>%
-  select (diff_1:diff_7, condition, differencetotal_pos, actual_1:actual_7) 
+  select (diff_1:diff_7, condition, differencetotal_pos, actual_1:actual_7) %>%
+  filter (actual_1==8 |actual_2==8 |actual_3==8 |actual_4==8 |actual_5==8 |actual_6==8 |actual_7==8)
 
+##make a new column- 0=didn't overreport, 1=overreported at least once
+actual_cols <- 10:16
+diff_cols <- 1:7
+df4$didtheyoverreport <- rowSums(df4[diff_cols] * as.numeric(df4[actual_cols] == 8))
 
-  filter (actual_1==8 & actual_1==7 | actual_2==8 & actual_2==7| actual_3==7 & actual_3==8 | actual_4==8 & actual_4==7 | actual_5==8 & actual_5==7 | actual_6==7 & actual_6==8 | actual_7==8 & actual_7==7)
+##filter out underreports & make a new column coding overreports as 1 and not overeports as 0. Then make a contingency table
+df4 <- df4 %>%
+  filter (didtheyoverreport >=0) %>%
+  mutate (didtheyoverreport2 = ifelse(didtheyoverreport == 0, 0, 1))
 
-df4 <- df4[df4$actual_1 %in% c(7, 8), ]
+table4 <- table (df4$condition, df4$didtheyoverreport2)
+
+chisq3 <- chisq.test(df4$condition, df4$didtheyoverreport2, correct=FALSE)
+(chisq3)
   
 ```
 
-Goal commitment scores
+Goal commitment scores analysis
 
-```{r}
+```{r, echo=FALSE}
 #make a new df and run ordinary least squares regression
 df5 <- data1 %>%
   filter (condition != "doyourbest") %>%
@@ -384,9 +395,9 @@ summary(short_ols_test)
 
 ```
 
-Some graphs
+Some data visualizations
 
-```{r}
+```{r, echo=FALSE}
 # barplot showing the average number of reported words per condition. 
 ##there is a higher average of reported words in the reward goal condition.
 plot1 <- data1 %>%
