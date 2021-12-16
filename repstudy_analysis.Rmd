@@ -3,9 +3,10 @@ title: "Replication Study"
 author: "Sarah Jensen"
 date: "11/11/2021"
 output:
-  word_document: default
+  pdf_document: default
   html_document: default
-editor_options: 
+  word_document: default
+editor_options:
   chunk_output_type: console
 ---
 In this project, I attempt to replicate the results of a particularly influential paper on goal setting and unethical behavior (Schweitzer, Ordonez, & Douma, 2004).
@@ -192,7 +193,7 @@ data1 <- data3
 
 Explore the data + demographics
 
-```{r}
+```{r, echo=FALSE}
 #demographics
 data1$age <- as.numeric(data1$age)
 mean(data1$age, na.rm = TRUE) #36.77
@@ -222,7 +223,7 @@ TukeyHSD(oneway_result)
 
 ```
 ### Analysis for H1: People with specific, unmet goals will be more likely to overreport their performance compared with those who don't have specific goals.
-```{r}
+```{r, echo=FALSE}
 #make new df for comparing number of words in the goal conditions to the DYB condition 
 ttest_df <- data1 %>%
   select (condition, reporttotal, actualtotal, differencetotal_pos, differencetotal_neg) %>%
@@ -264,7 +265,7 @@ anotherdf <- data1 %>%
   
 actual_cols <- 6:12
 diff_cols <- 13:19
-anotherdf$didtheyoverreport <- rowSums(anotherdf[diff_cols] * as.numeric(anotherdf[diff_cols] != 0))
+anotherdf$didtheyoverreport <- rowSums(anotherdf[actual_cols] * as.numeric(anotherdf[diff_cols] != 0))
 
 anotherdf <- anotherdf %>%
   filter (didtheyoverreport >=0) %>%
@@ -283,7 +284,7 @@ TukeyHSD(oneway_result)
 
 ```
 ### Analysis for H2: People with unmet reward goals will be more likely to overstate their performance than people with unmet mere goals.
-```{r}
+```{r, echo=FALSE}
 #t-test that examines difference score in rewardgoal vs meregoal conditions
 ttest_df2 <- data1 %>%
   filter (condition != "doyourbest") %>%
@@ -291,44 +292,9 @@ ttest_df2 <- data1 %>%
 
 t.test(differencetotal_pos ~ condition, ttest_df2, var.equal = FALSE)
 
-#make table to look at proportions of people - HAVE NOT FINISHED THIS
-
-
-#chi-squared to examine over reports in just the goal conditions
-chisq_df2 <- data1 %>%
-  filter (condition != "doyourbest") %>%
-  select (condition,differencetotal_pos, differencetotal_neg) %>%
-  group_by (condition) %>%
-  summarize (overreport=sum(differencetotal_pos >= 1),
-             underreport=sum(differencetotal_neg <=-1)) %>%
-  gather (overreport, underreport, key=report, value=words)
-
-table3 <- data.frame(N= c(56, 54),
-                     condition= c("meregoal", "rewardgoal"),
-                     report= c("overreport", "underreport"),
-                     value1= c(28, 23),
-                     value2= c(29, 27))
-table3 <- table3 %>%
-  mutate(overreport_prop=overreport/N*100,
-         underreport_prop=underreport/N*100) 
-
-#OLD
-table1 <- left_join (chisq_df2, table1, copy=TRUE, by="condition")
-table2 <- table1 %>%
-  mutate(overreport_prop=overreport/N*100,
-         underreport_prop=underreport/N*100) %>%
-  subset(select=c("condition","overreport_prop","underreport_prop"))
-
-table(chisq_df2$overreport, chisq_df2$underreport)
-conTable(table2)
-
-chisq2 <- chisq.test(chisq_df2$condition, chisq_df2$report, correrct=FALSE)
-(chisq2)
-chisq2 <- chisq.test(table(chisq_df2))
-
 ```
 ### Analysis H3: People who fail to reach their goals by a small margin will be more likely to falsely claim to have reached their goals than people who fail to reach their goals by a large margin.
-```{r}
+```{r, echo=FALSE}
 #make df keeping all rounds & totals for only goal conditions, filter out people who made 9 or more words (so less than or equal to 8 words)
 #for the remaining data, select the actual columns to find those who overstated once and those who accurately stated once
 #make report_correct & report_incorrect variables
