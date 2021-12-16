@@ -263,15 +263,7 @@ chisq_df1 <- data1 %>%
   select (condition, differencetotal_pos)
   
 chisq <- chisq.test(chisq_df1)
-chisq
-
-#------------------------------------------------------------------------
-##I'm trying to get the df ready for chisq test...not working
-try <- data1 %>%
-  select (condition, differencetotal) %>%
-  group_by(condition) %>%
-  count (differencetotal >= 1) %>%
-  spread (key= "condition", value = "n")
+print(chisq)
 
 ##compare difference in DYB vs. mere goal & DYB vs. reward goal...need to fix df
 chisq.test(table_overreport$doyourbest, table_overreport$meregoal)
@@ -283,20 +275,44 @@ chisq.test(chisq_df1$doyourbest, chisq_df$rewardgoal)
 #t-test that examines difference score in rewardgoal vs meregoal conditions
 ttest_df2 <- data1 %>%
   filter (condition != "doyourbest") %>%
-  select (condition, reporttotal, actualtotal, differencetotal)
+  select (condition, reporttotal, differencetotal_pos)
 
-t.test(actualtotal ~ condition, ttest_df2, var.equal = TRUE)
+t.test(differencetotal_pos ~ condition, ttest_df2, var.equal = FALSE)
 
-#make table to look at proportions of people 
+#make table to look at proportions of people - HAVE NOT FINISHED THIS
+
 
 #chi-squared to examine over reports in just the goal conditions
 chisq_df2 <- data1 %>%
   filter (condition != "doyourbest") %>%
-  select (condition, reporttotal, actualtotal, differencetotal) %>%
+  select (condition,differencetotal_pos, differencetotal_neg) %>%
   group_by (condition) %>%
-  count (differencetotal >= 1)
+  summarize (overreport=sum(differencetotal_pos >= 1),
+             underreport=sum(differencetotal_neg <=-1)) %>%
+  gather (overreport, underreport, key=report, value=words)
 
-chisq.test(chisq_df$-----, chisq_df$-----)
+table3 <- data.frame(N= c(56, 54),
+                     condition= c("meregoal", "rewardgoal"),
+                     report= c("overreport", "underreport"),
+                     value1= c(28, 23),
+                     value2= c(29, 27))
+table3 <- table3 %>%
+  mutate(overreport_prop=overreport/N*100,
+         underreport_prop=underreport/N*100) 
+
+#OLD
+table1 <- left_join (chisq_df2, table1, copy=TRUE, by="condition")
+table2 <- table1 %>%
+  mutate(overreport_prop=overreport/N*100,
+         underreport_prop=underreport/N*100) %>%
+  subset(select=c("condition","overreport_prop","underreport_prop"))
+
+table(chisq_df2$overreport, chisq_df2$underreport)
+conTable(table2)
+
+chisq2 <- chisq.test(chisq_df2$condition, chisq_df2$report, correrct=FALSE)
+(chisq2)
+chisq2 <- chisq.test(table(chisq_df2))
 
 #t-test to see if number of words overreported differs by condition.
 t.test(chisq_df$----, ttest_df$-----, paired = TRUE, alternative = "two.sided")
@@ -304,30 +320,72 @@ t.test(chisq_df$----, ttest_df$-----, paired = TRUE, alternative = "two.sided")
 ```
 ### Analysis H3: People who fail to reach their goals by a small margin will be more likely to falsely claim to have reached their goals than people who fail to reach their goals by a large margin.
 ```{r}
-#make df keeping all rounds & totals for only goal conditions, filter out people who made 9 or more words
-#for the remaining data filter by difference total to find those who overstated once and use diff scores to find those who accurately stated once and then
+#make df keeping all rounds & totals for only goal conditions, filter out people who made 9 or more words (so less than or equal to 8 words)
+#for the remaining data, select the actual columns to find those who overstated once and those who accurately stated once
 #make report_correct & report_incorrect variables
+
 df3 <- data1 %>%
+  select (diff_1:diff_7, condition, differencetotal_pos, actual_1:actual_7) %>%
   filter (condition != "doyourbest") %>%
-  filter (actual_1<=9) %>%
-  filter (actual_2<=9) %>%
-  filter (actual_3<=9) %>%
-  filter (actual_4<=9) %>%
-  filter (actual_5<=9) %>%
-  filter (actual_6<=9) %>%
-  filter (actual_7<=9) %>%
-  filter (differencetotal !=0) %>%
-  filter (diff_1 ==0 | diff_2==0 | diff_3==0 | diff_4==0 | diff_5==0| diff_6==0 | diff_7==0) %>%
-  mutate (report_correct=rowSums(select_if(actual_1:actual_7(select_if( diff_1:diff_7, contains(0))))))
+  filter (actual_1<=8) %>%
+  filter (actual_2<=8) %>%
+  filter (actual_3<=8) %>%
+  filter (actual_4<=8) %>%
+  filter (actual_5<=8) %>%
+  filter (actual_6<=8) %>%
+  filter (actual_7<=8) %>%
+  filter (differencetotal_pos !=0) %>%
+  filter (diff_1 ==0 | diff_2==0 | diff_3==0 | diff_4==0 | diff_5==0| diff_6==0 | diff_7==0) 
 
-#mutate(
-    total = sum(c_across(-c))
-#matches(match, ignore.case = TRUE, perl = FALSE, vars = NULL)
+#make new column for the number of words reported in the correctly reported rounds
+#make new column for the number of words reported in the incorrectly reported rounds
+actual_cols <- 10:16
+diff_cols <- 1:7
+df3$report_correct <- rowSums(df3[actual_cols] * as.numeric(df3[diff_cols] == 0))
+df3$report_incorrect <- rowSums(df3[actual_cols] * as.numeric(df3[diff_cols] != 0))
+
 #run paired t-tests
+t.test(df3$report_correct, df3$report_incorrect, paired = TRUE, alternative = "two.sided")
+table_df3 <- df3 %>%
+  get_summary_stats (report_correct, report_incorrect, type= "mean_sd")
 
+
+#for the cases in which 7 or 8 words were created, 
+df4 <- data1 %>%
+  select (diff_1:diff_7, condition, differencetotal_pos, actual_1:actual_7) 
+
+
+  filter (actual_1==8 & actual_1==7 | actual_2==8 & actual_2==7| actual_3==7 & actual_3==8 | actual_4==8 & actual_4==7 | actual_5==8 & actual_5==7 | actual_6==7 & actual_6==8 | actual_7==8 & actual_7==7)
+
+df4 <- df4[df4$actual_1 %in% c(7, 8), ]
+  
+```
+
+Goal commitment scores
+
+```{r}
+#make a new df and run ordinary least squares regression
+df5 <- data1 %>%
+  filter (condition != "doyourbest") %>%
+  select (condition, actualtotal, goalcommit_1:goalcommit_8) %>%
+  mutate (gc_score = rowSums(select(., goalcommit_1:goalcommit_8)))
+
+ols_test <- lm(actualtotal ~ gc_score * condition, data = df5) 
+summary(ols_test)
+
+#now run it with just questions 4-8 (short goal commitment scale)
+df6 <- data1 %>%
+  filter (condition != "doyourbest") %>%
+  select (condition, actualtotal, goalcommit_4:goalcommit_8) %>%
+  mutate (gc_score1 = rowSums(select(., goalcommit_4:goalcommit_8)))
+
+short_ols_test <- lm(actualtotal ~ gc_score1 * condition, data = df6) 
+summary(short_ols_test)
 
 ```
+
 Some graphs
+
 ```{r}
 # barplot showing the average number of reported words per condition. 
 ##there is a higher average of reported words in the reward goal condition.
