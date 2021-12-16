@@ -255,19 +255,31 @@ overstated <- data1 %>%
 ##Reward 53.7%
 
 
-#find the people who overstated at least once by filtering for differencetotal >= 1
-chisq_df1 <- data1 %>%
-  select (condition, differencetotal_pos) %>%
-  filter (differencetotal_pos >= 1) %>%
-  mutate(condition = recode(condition, rewardgoal = 1, meregoal=2, doyourbest= 3)) %>%
-  select (condition, differencetotal_pos)
-  
-chisq <- chisq.test(chisq_df1)
-print(chisq)
+#I ran the chi-squared to see if there are differences beteween overreports under H3,  but it should be here instead. The result is under (chisq3)
 
-##compare difference in DYB vs. mere goal & DYB vs. reward goal...need to fix df
-chisq.test(table_overreport$doyourbest, table_overreport$meregoal)
-chisq.test(chisq_df1$doyourbest, chisq_df$rewardgoal)
+#Also tried to do this for the 2 levels (goal conditions and DYB)
+anotherdf <- data1 %>%
+  select (condition, reporttotal, actualtotal, differencetotal_pos, differencetotal_neg, actual_1:actual_7, diff_1:diff_7) %>%
+  mutate (condition =recode_factor(condition, doyourbest = "doyourbest", meregoal= "goalavg", rewardgoal= "goalavg"))
+  
+actual_cols <- 6:12
+diff_cols <- 13:19
+anotherdf$didtheyoverreport <- rowSums(anotherdf[diff_cols] * as.numeric(anotherdf[diff_cols] != 0))
+
+anotherdf <- anotherdf %>%
+  filter (didtheyoverreport >=0) %>%
+  mutate (didtheyoverreport2 = ifelse(didtheyoverreport == 0, 0, 1))
+
+table5 <- table(anotherdf$condition, anotherdf$didtheyoverreport2)
+print(table5)
+
+chisq4 <- chisq.test(anotherdf$condition, anotherdf$didtheyoverreport2, correct=FALSE)
+(chisq4)
+
+#run one-way ANOVA  
+oneway.test (differencetotal_pos ~ condition, data = chisq_df1, var.equal = TRUE)
+oneway_result <- aov(differencetotal_pos ~ condition, data = chisq_df1)
+TukeyHSD(oneway_result)
 
 ```
 ### Analysis for H2: People with unmet reward goals will be more likely to overstate their performance than people with unmet mere goals.
@@ -313,9 +325,6 @@ conTable(table2)
 chisq2 <- chisq.test(chisq_df2$condition, chisq_df2$report, correrct=FALSE)
 (chisq2)
 chisq2 <- chisq.test(table(chisq_df2))
-
-#t-test to see if number of words overreported differs by condition.
-t.test(chisq_df$----, ttest_df$-----, paired = TRUE, alternative = "two.sided")
 
 ```
 ### Analysis H3: People who fail to reach their goals by a small margin will be more likely to falsely claim to have reached their goals than people who fail to reach their goals by a large margin.
@@ -474,33 +483,10 @@ plot6 <- ggplot (data1, aes(COUNT_NEG)) +
     
 #table replicated from pg. 427
 table427 <- data1 %>%
-  select (condition, actual_1:differencetotal) %>% 
+  select (condition, actual_1:actual_7) %>% 
   group_by (condition) %>% 
-  get_summary_stats (reporttotal, actualtotal, differencetotal, type="mean_sd")
+  get_summary_stats (actual_1, actual_2, actual_3, actual_4, actual_5, actual_6, actual_7, type="mean_sd")
 
-(table427)
-
-table427_2 <-data1 %>%
-  mutate (actual_metgoal_1 = actual_1 >= 9, actual_metgoal_2 = actual_2 >= 9, actual_metgoal_3 = actual_3 >= 9, actual_metgoal_4 = actual_4 >= 9, actual_metgoal_5 = actual_5 >= 9, actual_metgoal_6 = actual_6 >= 9, actual_metgoal_7 = actual_7 >= 9, claim_metgoal_1 = report_1 >= 9, claim_metgoal_2 = report_2 >=9, claim_metgoal_3 = report_3 >=9, claim_metgoal_4 = report_4 >=9, claim_metgoal_5 = report_5 >=9, claim_metgoal_6 = report_6 >=9, claim_metgoal_7 = report_7 >=9)
-
-print(table427_2)
-
-table427_2 %>%
-  mutate (actual_metgoal_n = case_when(actual_metgoal_1 == "TRUE" ~ "TRUE"))
-                                            
-                         
-species == "Droid" ~ "robot"
-#rowSums	(	D bool[[2]] 	mat	)	
-#which(rowSums(m3T3L1mRNA.tmp[,c(2,4)] == 20) != 2)
-#mutate(blubb = rowSums(select(., -3)))
-#mutate(blubb = rowSums(select(., .dots = all_of(desired_columns))))
-#rowSums(select(., matches("^(d|c)")) == 4) > 0)
-#sum(c_across(where(is.numeric)
-#claim_metgoal_n = rowsums(., []claim_metgoal_1:claim_metgoal_7))
-        
- # select (condition, actual_metgoal_1:claim_metgoal_7)
+print(table427)
           
-data1 <- new7 %>%
-  mutate (reporttotal=rowSums(select(.,report_1:report_7)), actualtotal=rowSums(select(., actual_1:actual_7)), differencetotal=reporttotal-actualtotal, diff_1=report_1-actual_1, diff_2=report_2-actual_2, diff_3=report_3-actual_3, diff_4=report_4-actual_4, diff_5=report_5-actual_5, diff_6=report_6-actual_6, diff_7=report_7-actual_7) 
-  
 ```
