@@ -21,7 +21,7 @@ In this paper, I am trying to replicate the findings of "Goal Setting as a Motiv
 *stringr <br />
 
 ### Files <br />
-*[Deidentified Data](link) <br />
+*[Deidentified Data](repdata_12.9.21.xlsx) <br />
 *[Analysis](repstudy_analysis.Rmd) <br />
 
 
